@@ -1,0 +1,51 @@
+name: ETORTY-DEV CI
+
+on:
+  push:
+    branches: [ sandbox, main ]
+  pull_request:
+    branches: [ sandbox, main ]
+
+jobs:
+  deployments:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.10.0'
+          cache: 'npm'
+      - run: npm install
+      - run: npm run build
+
+      - name: Deploy Sandbox
+        if: github.ref == 'refs/heads/development'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: ${{ secrets.DEV_SCRIPT }}
+
+      # - name: Deploy UAT
+      #   if: github.ref == 'refs/heads/uat'
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     password: ${{ secrets.PASSWORD }}
+      #     port: ${{ secrets.SSH_PORT }}
+      #     script: ${{ secrets.UAT_SCRIPT }}
+
+      - name: Deploy Main
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.PASSWORD }}
+          port: ${{ secrets.SSH_PORT }}
+          script: ${{ secrets.MASTER_SCRIPT }}
